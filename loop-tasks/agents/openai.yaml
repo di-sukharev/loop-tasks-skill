@@ -1,0 +1,4 @@
+interface:
+  display_name: "Loop Tasks"
+  short_description: "Sequential task execution via fresh sub-agents"
+  default_prompt: "Use $loop-tasks to complete every task in the provided batch sequentially through fresh sub-agents."
