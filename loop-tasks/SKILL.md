@@ -21,6 +21,11 @@ Before starting and before each subsequent task, run `git status --short`.
 If the output is not empty, show the existing changes and stop. Continue only after the changes
 have been committed and pushed and the working tree is clean.
 
+Never return to a completed task. Only in the exceptional case where omitted work is absolutely
+required—a `must`, not a `nice-to-have`—may the orchestrator authorize a working sub-agent to
+add a new task at the appropriate position in the task list. Keep the completed task closed and
+process the new task through the normal loop.
+
 Workflow:
 
 1. Taking order and dependencies into account, select the first open task from the list. An unresolved internal dependency is not a blocker: complete it first through the same loop, then return to the original task.
