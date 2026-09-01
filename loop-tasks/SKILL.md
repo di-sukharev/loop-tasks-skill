@@ -22,9 +22,10 @@ If the output is not empty, show the existing changes and stop. Continue only af
 have been committed and pushed and the working tree is clean.
 
 Never return to a completed task. Only in the exceptional case where omitted work is absolutely
-required—a `must`, not a `nice-to-have`—may the orchestrator authorize a working sub-agent to
-add a new task at the appropriate position in the task list. Keep the completed task closed and
-process the new task through the normal loop.
+required—a `must`, not a `nice-to-have`—may the orchestrator authorize the same working sub-agent
+to add a new task at the appropriate position in the task list and proceed with the required
+implementation under that newly created task. Keep the completed task closed; all further work
+belongs to the new task and follows the same review, commit, push, and clean-tree rules.
 
 Workflow:
 
