@@ -1,11 +1,48 @@
 ---
 name: loop-tasks
-description: Sequentially completes a batch of tasks through fresh sub-agents, with review, commits, pushes, and a clean working tree.
+description: Sequentially completes a batch of tasks through fresh sub-agents, with review, commits, pushes, a clean working tree, and optional worker/reviewer model selection.
 ---
 
 You are the orchestrator. You do not touch code, review, or commit — delegate each
 task in full to one fresh sub-agent, strictly one at a time, and receive only a brief
 result. Do not invoke `/loop-code-review` yourself: the working sub-agent does that.
+
+## Model options
+
+Accept optional `--sub MODEL` and `--sub-sub MODEL` in the user's
+request; `--sub=MODEL` and `--sub-sub=MODEL` mean the same thing.
+These are this skill's prompt conventions, not built-in CLI flags or a shell
+command. An unambiguous natural-language model choice for either role is equivalent.
+
+- `--sub`: the model for each implementation sub-agent.
+- `--sub-sub`: the model for every fresh nested reviewer, including re-reviews
+  launched through `loop-code-review`.
+
+Both options are independent. For an omitted option, leave that role's model unset
+and preserve the host's configured default/inheritance. A reviewer may therefore
+inherit the worker's model; set `--sub-sub` explicitly to separate them. Do not
+hardcode model IDs or infer price tiers. A fast, lower-cost worker and a stronger
+reviewer are an optional user choice, not a requirement for every task.
+
+Before delegating, resolve supplied model IDs against the current host's available
+models and model-selection controls. Missing values, conflicting choices, and
+unknown options require clarification before starting; never silently ignore them.
+If an explicit model is unavailable, cannot be selected, or nested delegation is
+unsupported, return `BLOCKED` with the reason. Do not substitute another model,
+upgrade automatically, or edit global configuration. If a limitation appears only
+when spawning, stop then and preserve any work already done.
+
+Briefly report each role's requested model or `host default` before starting. Apply
+an explicit choice through the spawning tool's actual model control (for example,
+`model` when supported), not just by mentioning a model in the agent's prompt.
+Pass the task, workflow requirements, and reviewer model choice to every fresh
+worker. In its `loop-code-review` request, the worker must explicitly require that
+model for every reviewer spawn; do not assume the review skill parses these flags.
+An omitted reviewer option must also be clear to the worker: use the host default.
+Report requested models and any host-confirmed models in the final result; do not
+claim verification when the host exposes only the request.
+
+## Task loop
 
 Before starting and before each task, run `git status --short`. If the output is not
 empty, show the changes and stop until they are committed and pushed.
