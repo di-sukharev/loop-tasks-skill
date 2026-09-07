@@ -1,87 +1,93 @@
 ---
 name: loop-tasks
-description: Sequentially completes a batch of tasks through fresh sub-agents, with review, commits, pushes, a clean working tree, and optional worker/reviewer model selection.
+description: Complete task batches sequentially through fresh workers and P0/P1 reviewers, with validation, commits, pushes, and optional model selection.
 ---
 
-You are the orchestrator. You do not touch code, review, or commit — delegate each
-task in full to one fresh sub-agent, strictly one at a time, and receive only a brief
-result. Do not invoke `/loop-code-review` yourself: the working sub-agent does that.
+You are the orchestrator. Complete the batch through one fresh worker per task,
+strictly sequentially. Minimize total completion time within the requirements below.
+
+## Orchestrator boundary
+
+Keep only task requirements, queue and dependencies, model settings, brief worker
+results, and current process hints in context. Pick the first open task in dependency
+order; delegate investigation when the next step requires implementation knowledge.
+
+Delegate all implementation, investigation, validation, review, and Git operations.
+Do not read source code, diffs, logs, agent histories, or detailed reviews. Use worker
+confirmations and compact updates without repeating their checks or polling
+unchanged state.
+
+Start workers without parent history (`fork_turns: "none"` in Codex or equivalent).
+Supply the task and acceptance criteria, repository and material paths, relevant user
+constraints and dependency outcomes, worker duties from this skill, model choices,
+and applicable process hints.
 
 ## Model options
 
-Accept optional `--sub MODEL` and `--sub-sub MODEL` in the user's
-request; `--sub=MODEL` and `--sub-sub=MODEL` mean the same thing.
-These are this skill's prompt conventions, not built-in CLI flags or a shell
-command. An unambiguous natural-language model choice for either role is equivalent.
+Accept `--sub MODEL` for workers and `--sub-sub MODEL` for every nested reviewer,
+including re-reviews. Also accept `--sub=MODEL`, `--sub-sub=MODEL`, and unambiguous
+natural-language choices. These are prompt conventions, not CLI flags.
 
-- `--sub`: the model for each implementation sub-agent.
-- `--sub-sub`: the model for every fresh nested reviewer, including re-reviews
-  launched through `loop-code-review`.
+The options are independent. Leave omitted roles unset to preserve host defaults
+and inheritance; a reviewer may inherit the worker's model.
 
-Both options are independent. For an omitted option, leave that role's model unset
-and preserve the host's configured default/inheritance. A reviewer may therefore
-inherit the worker's model; set `--sub-sub` explicitly to separate them. Do not
-hardcode model IDs or infer price tiers. A fast, lower-cost worker and a stronger
-reviewer are an optional user choice, not a requirement for every task.
+Before delegation, check requested models against host availability and selection
+controls. Clarify missing values, conflicting choices, or unknown options. If a
+requested model cannot be selected or nested delegation is unsupported, return
+`BLOCKED` with the reason and preserve existing work. Do not substitute models or
+edit global configuration.
 
-Before delegating, resolve supplied model IDs against the current host's available
-models and model-selection controls. Missing values, conflicting choices, and
-unknown options require clarification before starting; never silently ignore them.
-If an explicit model is unavailable, cannot be selected, or nested delegation is
-unsupported, return `BLOCKED` with the reason. Do not substitute another model,
-upgrade automatically, or edit global configuration. If a limitation appears only
-when spawning, stop then and preserve any work already done.
+Apply explicit choices through spawning-tool model controls. Pass the reviewer
+choice (or `host default`) to every worker, which must require it in its
+`loop-code-review` request and apply it to every reviewer spawn.
+Report each role's requested model or `host default` before starting and at the end;
+distinguish requests from any host-confirmed models.
 
-Briefly report each role's requested model or `host default` before starting. Apply
-an explicit choice through the spawning tool's actual model control (for example,
-`model` when supported), not just by mentioning a model in the agent's prompt.
-Pass the task, workflow requirements, and reviewer model choice to every fresh
-worker. In its `loop-code-review` request, the worker must explicitly require that
-model for every reviewer spawn; do not assume the review skill parses these flags.
-An omitted reviewer option must also be clear to the worker: use the host default.
-Report requested models and any host-confirmed models in the final result; do not
-claim verification when the host exposes only the request.
+## Worker workflow
 
-## Task loop
+1. Check `git status --short` before starting. If nonempty, leave changes untouched
+   and return `BLOCKED` with affected paths. Resume when the working tree is clean.
+2. Read project instructions and relevant code, implement the task, and validate as
+   below. Fulfill all acceptance criteria regardless of review severity.
+3. Invoke `/loop-code-review`. In its request and every fresh read-only reviewer
+   prompt, restrict reported and blocking findings to substantiated P0/P1. Retain
+   required validation. Get the complete findings before fixing accepted issues
+   as a coherent batch.
+4. After review passes, run the applicable broad gate once before commit and push.
+   Fix task-caused failures, validate affected behavior, and obtain fresh review of
+   the updated task. A passing unchanged snapshot needs no re-review.
+5. Mark the task complete, commit and push all task-owned files, including new files,
+   and return `DONE` only with an empty `git status --short`. Leave unrelated or
+   unclear changes untouched and return `BLOCKED`.
 
-Before starting and before each task, run `git status --short`. If the output is not
-empty, show the changes and stop until they are committed and pushed.
+Validation:
 
-Workflow:
+- During implementation and before each review, use the smallest credible checks for
+  the changed behavior. Reuse passing results for unchanged state; give reviewers
+  compact outcomes and relevant failure tails.
+- Inspect project scripts to avoid repeating checks covered by composite commands.
+  Preserve every required validation boundary. If no broad gate applies, scoped
+  checks suffice.
 
-1. Pick the first open task, respecting order and dependencies. An unresolved internal
-   dependency is not a blocker: complete it through the same loop first, then return.
-2. The working sub-agent reads the project instructions and related code, implements
-   the task, and validates per the ladder below. Then IT invokes review.
-3. Each review pass is a fresh nested reviewer that changes nothing and returns its
-   complete P0/P1 set before any fix. The working sub-agent fixes accepted findings
-   as one coherent batch: behavioral errors, regressions, vulnerabilities, data loss,
-   contract violations, and checks broken by the changes. It ignores style, naming,
-   future improvements, and optional refactoring.
-4. When review passes, the sub-agent runs the task's broad terminal gate once. A
-   task-caused failure gets a fix, scoped validation, and a fresh review; a passing
-   unchanged snapshot needs no re-review merely because the gate ran.
-5. Then the sub-agent marks the task complete, commits and pushes everything for the
-   task, including new files, and returns success only when `git status --short` is
-   empty. Unrelated or unclear changes it leaves alone and returns `BLOCKED`.
-6. Move to the next task only after a successful push and with a clean tree.
+## Results and continuation
 
-Validation ladder:
+Workers report briefly:
 
-- While implementing, run the smallest focused checks for the changed behavior, not
-  the whole repository gate.
-- Before each review, validate the scoped snapshot with the smallest credible checks.
-  Reuse results while the snapshot is unchanged; never rerun a green broad command
-  merely to restate evidence. Give the reviewer compact outcomes and failure tails,
-  not passing logs.
-- A composite gate supersedes the commands it runs itself — inspect project scripts
-  instead of guessing. Deduplication removes only repeated runs of the same boundary
-  on the same unchanged snapshot, never a required boundary.
+- `DONE`, `DEPENDENCY`, or `BLOCKED`, with the result or reason.
+- Acceptance, validation, and P0/P1 review outcomes; commits, push destination and
+  outcome, clean-tree status, and any host-confirmed models. Identify unrun steps.
+- Dependencies or required follow-up work with enough context to dispatch them.
+- After notable delays or repeated work, a bottleneck and useful process adjustment.
 
-Never reopen a completed task. Only if omitted work is a must — not a nice-to-have —
-the sub-agent adds a new task at the right position in the list and does the work
-there, under the same rules.
+Advance on `DONE` with successful push and a clean tree confirmed. On `DEPENDENCY`,
+keep the task open, have the worker prepare a clean handoff, complete the prerequisite
+through the same loop, then return. Keep completed tasks closed; queue newly
+discovered required work separately.
 
-Stop only when continuing requires the user: a response, external access, or
-clarification for safe work. No deployments, production migrations, or dangerous data
-changes. At the end, list the completed tasks and commits.
+After each task, adjust later worker instructions only when the report supports a
+useful change. Keep a few applicable hints, replacing stale ones. Otherwise continue
+immediately. Adapt the process without relaxing requirements or changing user model
+choices; do not require detailed retrospectives or timing reports.
+
+Stop only when user input or external access is required. No deployments, production
+migrations, or dangerous data changes. Finish with completed tasks and commits.
