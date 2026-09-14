@@ -3,7 +3,7 @@ name: loop-tasks
 description: Complete a task queue through subagents, splitting tasks into small subtasks executed one at a time, with worker reuse, validation, and independent review.
 ---
 
-Manage the task queue. Aim for a fully sufficient result with minimally sufficient
+Manage the task queue. Aim for a complete result with minimally sufficient
 solutions and minimal total time and token cost. Preserve requirements and quality;
 adapt the workflow to the work. Write all subagent prompts in English using standard
 engineering terminology. Keep user-facing communication in the user's language.
