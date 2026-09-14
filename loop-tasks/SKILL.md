@@ -8,6 +8,12 @@ solutions and minimal total time and token cost. Preserve requirements and quali
 adapt the workflow to the work. Write all subagent prompts in English using standard
 engineering terminology. Keep user-facing communication in the user's language.
 
+Minimally sufficient means the simplest, most elegant implementation that meets
+all acceptance criteria. Keep UX/UI as simple as the requirements allow. Avoid
+unrequested features, workflows, settings, and product decisions. Leave optional
+refinements to the user's follow-up requests; never defer required behavior as
+polish. Pass this principle to workers and reviewers.
+
 Respect dependencies and split tasks into small subtasks. Assign one subtask at a
 time with a clear definition of done (DoD): acceptance criteria, implementation
 approach, relevant materials, constraints, edge cases, and validation. Assign the
