@@ -16,7 +16,7 @@
 Отправьте агенту:
 
 ```text
-Установи глобально эти скиллы:
+Install these skills globally:
 https://github.com/di-sukharev/loop-code-review-skill
 https://github.com/di-sukharev/loop-tasks-skill
 ```
@@ -29,14 +29,14 @@ https://github.com/di-sukharev/loop-tasks-skill
 
 ```text
 $loop-tasks
-Выполни следующие три открытые задачи из tasks/.
+Complete the next three open tasks in tasks/, one subtask at a time.
 ```
 
 В Claude Code используйте `/loop-tasks`. При желании укажите модели:
 
 ```text
 $loop-tasks --sub gpt-5.6-luna --sub-sub gpt-6-astra
-Выполни следующие три открытые задачи из tasks/.
+Complete the next three open tasks in tasks/, one subtask at a time.
 ```
 
 `--sub` — исполнитель, `--sub-sub` — каждый ревьюер. Поддерживаются `--sub=MODEL`,
