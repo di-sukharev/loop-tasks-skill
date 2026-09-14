@@ -1,4 +1,4 @@
 interface:
   display_name: "Loop Tasks"
-  short_description: "Efficient task queues with adaptive worker reuse"
-  default_prompt: "Use $loop-tasks to complete the supplied task queue sequentially through subagents, with appropriate validation and independent review."
+  short_description: "Очередь задач с выполнением по одной подзадаче"
+  default_prompt: "Используй $loop-tasks: разбей задачи на подзадачи и выполни их по одной через саб-агентов, с нужными проверками и независимым ревью."

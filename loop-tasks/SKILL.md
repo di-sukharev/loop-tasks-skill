@@ -1,44 +1,45 @@
 ---
 name: loop-tasks
-description: Complete a task queue sequentially through subagents, adapting worker reuse, validation, and review to minimize time and token cost while meeting requirements.
+description: Complete a task queue through subagents, splitting tasks into small subtasks executed one at a time, with worker reuse, validation, and independent review.
 ---
 
-Manage the supplied task queue to completion with minimal total time and token cost.
-Preserve requirements and quality; adapt the workflow rather than adding ceremony.
+Ты ведёшь очередь задач. Цель — абсолютно достаточный результат за минимум
+времени и токенов. Выбирай минимально достаточные решения, сохраняя требования
+и качество. Процесс подстраивай под работу.
 
-Choose the next open task in dependency order and delegate implementation. Give the
-worker the expected outcome, relevant requirements, repository/material paths,
-constraints, and prerequisite results. Reuse a worker for related tasks when its
-knowledge helps; start a fresh one when independent judgment or a new context is
-more useful. New agents start without parent history (`fork_turns: "none"` in Codex).
-Keep execution sequential and respect the user's batch limit or stopping point.
+Учитывай зависимости и разбивай задачи на небольшие подзадачи. Выдавай исполнителю
+по одной подзадаче: что должно получиться, идея реализации, нужные материалы,
+ограничения, важные углы и как проверить готовность. Следующую выдавай после
+проверки предыдущей. Код пишет исполнитель. Связанные подзадачи обычно отдавай
+тому же агенту; нового запускай, когда полезнее свежий контекст. Новым агентам
+передавай нужные факты без истории родительского диалога (`fork_turns: "none"`
+в Codex). Соблюдай границу пачки и остановку, заданную пользователем.
 
-Work from short reports of results, checks, and blockers. Do not read subagent
-histories; inspect code or diffs only when needed to make a decision. Resolve routine
-engineering questions yourself, return incomplete work with clear guidance, and
-verify acceptance before closing a task. When blocked, consider independent tasks
-that can safely proceed, then return to the prerequisite when possible.
+Общайтесь короткими отчётами о результате, проверках и препятствиях. Историю
+саб-агентов не читай; код и дифф смотри, когда это нужно для решения.
+Обычные инженерные вопросы решай сам, недоделанное возвращай с понятным заданием.
+При блокере можно перейти к независимой подзадаче, сохранив незавершённую
+в очереди, но не запускай исполнителей параллельно.
 
-Use `loop-code-review` for independent review; let that skill own its review/fix
-process. Choose meaningful review and validation boundaries, grouping closely
-related work when useful. Keep tasks pending until their requirements, applicable
-checks, and review are satisfied. Reuse evidence for unchanged code and check
-interactions across completed tasks. Run broad checks when the change or project
-requires them, not mechanically after every small task. If required review or
-validation is unavailable, report the gap rather than declaring completion.
+Независимую проверку поручай `loop-code-review`, его процесс здесь не дублируй.
+Выбирай разумные границы ревью и проверок: связанные изменения можно проверить
+вместе. Задачу закрывай, когда выполнены её требования, пройдены нужные проверки
+и ревью. Проверяй и связи между задачами. Успешные проверки неизменённого кода
+не повторяй без причины; общий прогон нужен, когда этого требуют изменения
+или проект. Недоступную проверку или ревью не выдавай за успешные.
 
-Respect project instructions, existing work, and user authorization. Identify
-ownership before editing or staging; unrelated changes alone need not block work.
-Commit and push according to the user's request, keeping publication status distinct
-from implementation status. Do not lose track of failed or pending requested pushes,
-expand scope, or treat the skill as permission to deploy or change production data.
+Соблюдай инструкции проекта и сохраняй чужую работу. Определи свои изменения
+перед правками и коммитом; чужие изменения сами по себе не повод останавливать
+всю работу. Коммиты и push — согласно запросу пользователя. Учитывай отдельно,
+что реализовано и что отправлено: не теряй незавершённый push. Скилл не даёт
+разрешения расширять задачу, выкладывать приложение или менять продакшен-данные.
 
-Honor model choices: `--sub MODEL` selects workers and `--sub-sub MODEL` selects
-reviewers, including later review passes. Accept `--option=MODEL` and natural-language
-choices too. These are prompt options, not shell flags. Apply them through spawning
-tools and pass the reviewer choice to any worker running `loop-code-review`. Omitted
-roles keep host defaults/inheritance. Report unavailable choices without silently
-substituting models.
+`--sub MODEL` задаёт исполнителя, `--sub-sub MODEL` — каждого ревьюера.
+Принимай также `--sub=MODEL`, `--sub-sub=MODEL` и выбор обычным текстом.
+Это параметры промпта, передавай их инструментам запуска, включая каждый
+повторный проход ревью. Если ревью запускает исполнитель, передай ему выбор
+модели ревьюера. Без параметра оставь настройки и наследование приложения.
+Недоступную модель молча не подменяй.
 
-Continue while useful in-scope progress is possible. Briefly finish with completed
-and remaining tasks, validation/review outcomes, and requested Git operation results.
+Продолжай, пока можешь продвигаться в рамках запроса. В конце коротко сообщи,
+что выполнено, что осталось, чем проверено и что с запрошенными коммитами и push.
