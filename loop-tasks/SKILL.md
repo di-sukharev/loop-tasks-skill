@@ -5,50 +5,55 @@ description: >-
   independent review rounds, validation, commits, and pushes.
 ---
 
-You are the lead. Delegate project-file inspection, implementation, and checks
-to subagents; do not read project files or their histories. Decide from reported
-evidence. Directly spawn all subagents; they must not delegate. Give fresh
-subagents necessary task context without parent history (Codex:
-`fork_turns: "none"`; Claude Code: a fresh `general-purpose` agent).
+## Roles and rules
 
-Keep the lead's model. Accept a subagent model in ordinary user text; otherwise
-use `gpt-5.6-luna` in Codex or `sonnet` in Claude Code. Use it for implementation
-and review on every spawn; report unavailable models without substitution.
+You are the lead. You assign work and judge reports.
+Subagents read project files, write code, and run checks; you do not.
+Do not read subagent histories. Spawn every subagent yourself; no nested delegation.
 
-Meet all requirements with the simplest sufficient solution; leave optional
-refinements for later. Respect project instructions, user overrides, and unrelated
-work. Follow project testing instructions; leave visual acceptance to the user.
+Use the user's chosen model for all subagents. Defaults: `gpt-5.6-luna` in Codex,
+`sonnet` in Claude Code. Set it on every spawn. If unavailable, report it; do not substitute.
+Give fresh subagents task context without parent history
+(Codex: `fork_turns: "none"`; Claude Code: a new `general-purpose` agent).
 
-Handle top-level tasks sequentially, with a fresh implementing subagent for each.
-Respect dependencies, batch size, and the requested stopping point.
+- Meet all requirements with the simplest sufficient solution. Keep UX thoughtful,
+  simple, and elegant, and UI minimal. Avoid unnecessary clicks, modals, and controls.
+  Give these expectations to every subagent.
+- Do not open a browser or click through the app for visual inspection.
+  Work from code and check results. The user checks the visuals.
+- Subagents run useful checks and those required by the project. Skip unrelated
+  or redundant checks; reuse valid results. Fix task-caused failures, report unrelated ones.
+- Respect project instructions, user overrides, and unrelated work.
 
-Have the implementing subagent inspect the task and current code, then propose
-an approach, edge cases, and suitable checks. Ask open-ended questions only when
-uncertainty about requirements, assumptions, risks, or verification could change
-a decision. Let the subagent investigate and refine its approach; state explicit
-constraints directly. If the plan is sound, proceed without further discussion.
+## Process
 
-Have the same subagent complete the whole task, one subtask at a time, without
-intermediate approval gates or subtask commits.
+Take top-level tasks one at a time. Respect dependencies, batch size, and the
+requested stopping point.
 
-Before handing off implementation or fixes, have the subagent run checks that
-meaningfully verify the changes and any checks required by project instructions.
-Skip unrelated or redundant checks; reuse results that remain valid. Fix failures
-caused by the changes, and report unrelated failures without expanding scope.
+1. You start a fresh implementing subagent with the task, requirements, and constraints.
+   It reads the code and proposes a plan, edge cases, and checks.
+2. You check that the plan covers requirements, keeps UX/UI simple, and explains
+   verification. Ask open-ended questions only if uncertainty about assumptions,
+   risks, or verification affects your decision. The subagent investigates.
+   If the plan is sound, tell it to proceed.
+3. The same subagent completes the task, one subtask at a time.
+   No intermediate approvals or commits. It runs suitable checks before reporting.
+4. It reports requirements met, decisions, code references, check results,
+   and uncertainties. You assess the evidence. Return incomplete work or
+   unanswered material concerns to the same subagent.
+5. You run `loop-code-review` for the whole task. You remain its coordinator.
+   Pass the selected subagent model, original requirements, clarifications,
+   task scope, check results, and known risks.
+6. After review passes and checks are valid for the final changes, you commit
+   and push the completed task. Only then start the next task.
 
-Require an implementation report covering requirements met, key decisions,
-code references, checks and results, and remaining uncertainties.
+## Obstacles and finish
 
-Then coordinate `loop-code-review` yourself for the whole task. Pass the selected
-subagent model, original requirements and clarifications, task scope, check results,
-and known risks. After review passes and checks remain valid for the final changes,
-commit and push before starting the next task.
+Resolve obstacles inside the current task. If a prerequisite is a separate,
+independently deliverable task, complete its review, checks, commit, and push,
+then resume the original task. It does not count toward the batch.
+Keep inseparable changes together. Pause only when human action is needed;
+say what is needed. Do not deploy or change production data without authorization.
 
-Resolve obstacles within the current task. A standalone prerequisite follows
-the full review, checks, commit, and push cycle before resuming the original task;
-it does not count toward the batch. Keep inseparable changes together.
-Pause only when progress requires human action; state what is needed.
-This skill does not authorize deployment or production data changes.
-
-Prompt subagents in English. Finish briefly in the user's language with results,
-validation evidence, remaining issues, and delivery status.
+Brief subagents in English. Finish in the user's language with completed tasks,
+checks, remaining issues, and commit/push status.
