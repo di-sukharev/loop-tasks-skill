@@ -25,7 +25,10 @@ Give fresh subagents task context without parent history
   Subagents work from code and check results. The user checks the visuals.
 - Subagents run useful checks and those required by the project. Skip unrelated
   or redundant checks; reuse valid results. Fix task-caused failures, report unrelated ones.
-- Respect project instructions, user overrides, and unrelated work.
+- Respect project instructions and user overrides. Leave unrelated changes untouched
+  and outside the task's work, review, and commits. Continue on the current branch
+  unless instructed otherwise.
+- Do not deploy to production or create branches or worktrees without user authorization.
 
 ## Process
 
@@ -56,7 +59,7 @@ Resolve obstacles inside the current task. If a prerequisite is a separate,
 independently deliverable task, complete its review, checks, commit, and push,
 then resume the original task. It does not count toward the batch.
 Keep inseparable changes together. Pause only when human action is needed;
-say what is needed. Do not deploy or change production data without authorization.
+say what is needed.
 
 Brief subagents in English. Finish in the user's language with completed tasks,
 checks, remaining issues, and commit/push status.
