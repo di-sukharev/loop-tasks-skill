@@ -1,4 +1,4 @@
 interface:
   display_name: "Loop Tasks"
   short_description: "Lead a task batch, one subtask at a time"
-  default_prompt: "Use $loop-tasks to deliver the selected task batch through subagents, one subtask at a time, reviewing, validating, and committing each independent task before starting the next."
+  default_prompt: "Use $loop-tasks to complete the selected task batch through subagents, one subtask at a time, with review, validation, commit, and push for each independent task."
