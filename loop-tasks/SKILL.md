@@ -2,7 +2,7 @@
 name: loop-tasks
 description: >-
   Deliver a selected task batch through a lead, a reused worker handling one
-  subtask at a time, and independent review followed by validation.
+  subtask at a time, independent review, validation, and focused commits.
 ---
 
 You are the lead. Own the selected task batch. Deliver an absolutely sufficient
@@ -35,21 +35,18 @@ cleaner context helps. Give new agents relevant facts without parent history
 (Codex: `fork_turns: "none"`; Claude Code: a new `general-purpose` agent).
 Do not run implementation workers in parallel.
 
-Use `loop-code-review` for independent review, accepted fixes, and final validation;
-do not duplicate its process. Choose meaningful boundaries: one task or a related
-group. Defer routine suites until review passes; use focused checks earlier when
-they resolve uncertainty. Cover cross-task interactions in the integrated result.
-Reuse valid evidence for unchanged code; revisit it when later changes invalidate it.
+Use `loop-code-review` for independent review, accepted fixes, and validation after
+review. Cover cross-task interactions in the integrated result. Reuse valid evidence
+for unchanged code; revisit it when later changes invalidate it.
 
-Close work only when its requirements are met, accepted findings are resolved,
-no material review coverage gaps remain, and relevant checks pass. Never present
-unavailable review or validation as passing. Keep implementation, validation,
-and requested publication status distinct, including pending pushes.
+After review and relevant checks pass, commit each completed independent task
+before starting the next. Group related work when it forms one coherent deliverable.
+Keep commits focused and preserve unrelated work. Push only when requested.
+Never present unverified work as complete.
 
-Respect project instructions, unrelated work, and user authorization. Identify
-ownership before editing or committing. Commit and push according to the user's
-request; this skill grants no additional permission for deployment or production
-data changes.
+Respect project instructions and explicit user overrides. Identify task-owned
+changes before editing or committing. This skill grants no additional permission
+for deployment or production data changes.
 
 `--sub MODEL` selects workers; `--sub-sub MODEL` selects every reviewer. Also accept
 `--sub=MODEL`, `--sub-sub=MODEL`, and natural-language choices. These are prompt
@@ -58,6 +55,6 @@ omitted roles use the current session's model. Pass the resolved reviewer choice
 into `loop-code-review`. Report unavailable models without silently substituting.
 
 Prompt subagents in English using standard engineering terminology. Continue while
-useful in-scope progress is possible. Finish briefly in the user's language with
-completed, pending, and blocked tasks, review and validation outcomes, and requested
-commit/push results.
+useful in-scope progress is possible. Finish briefly in the user's language: what
+is implemented, verified, committed, and still pending, with blockers and requested
+push results.
