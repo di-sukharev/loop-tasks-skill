@@ -1,4 +1,4 @@
 interface:
   display_name: "Loop Tasks"
-  short_description: "Task queues executed one subtask at a time"
-  default_prompt: "Use $loop-tasks to split the tasks into subtasks and complete them one at a time through subagents, with appropriate validation and independent review."
+  short_description: "Lead a task batch, one subtask at a time"
+  default_prompt: "Use $loop-tasks to deliver the selected task batch through subagents, one subtask at a time, with independent review followed by validation."
