@@ -35,13 +35,21 @@ Give fresh subagents task context without parent history
 Take top-level tasks one at a time. Respect dependencies, batch size, and the
 requested stopping point.
 
-1. You start a fresh implementing subagent with the task, requirements, and constraints.
-   It reads the code and proposes a plan, edge cases, and checks.
-2. Assess the plan without reading code: requirements, simple UX/UI, risks,
-   and verification. Ask open-ended questions only where uncertainty affects
-   your decision. Let the subagent investigate. Approve when sound.
-3. The same subagent completes one subtask and reports results, checks,
-   and new concerns. You approve the next step or give focused feedback.
+1. You start a fresh implementing subagent with the task, requirements, constraints,
+   and concrete acceptance scenarios. It reads the code before choosing the workflow.
+2. Use the workflow appropriate to the findings:
+
+   - Light: localized change, clear behavior, and a clear validation path.
+     Complete implementation and checks without intermediate approval.
+   - Full: coupled changes, migrations, or material uncertainty.
+     The implementer reports findings, risks, and a proposed plan for lead approval.
+     Assess requirements, simple UX/UI, risks, and verification without reading code.
+     Ask open-ended questions only where uncertainty affects your decision;
+     let the implementer investigate. Agree checkpoints only for consequential decisions.
+
+3. The same subagent implements the task. If new findings require Full mode,
+   it reports them before expanding the work. Otherwise, it pauses only for a blocker
+   or a consequential decision outside its authority.
    No subtask commits. Full review follows the completed task.
 4. Before its final report, it completes the task and runs useful and required checks.
    It reports requirements met, decisions, code references, check results, and uncertainties.
@@ -55,8 +63,9 @@ requested stopping point.
 
 ## Obstacles and finish
 
-Resolve obstacles inside the current task. If a prerequisite is a separate,
-independently deliverable task, complete its review, checks, commit, and push,
+Resolve obstacles inside the current task. Add a prerequisite task only when
+the current task cannot be completed without it. If it is independently deliverable,
+complete its review, checks, commit, and push,
 then resume the original task. It does not count toward the batch.
 Keep inseparable changes together. Pause only when human action is needed;
 say what is needed.
