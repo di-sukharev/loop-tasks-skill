@@ -7,7 +7,8 @@
 Затем он использует [loop-code-review](https://github.com/di-sukharev/loop-code-review-skill)
 для ревью всей задачи. Он сам ведёт цикл с новыми проверяющими саб-агентами.
 После успешного ревью и итоговых проверок он делает коммит и push, когда это
-разрешено, и сообщает результат оркестратору. Только после этого начинается
+разрешено, и сообщает результат оркестратору. Оркестратор проверяет отклонённые
+замечания ревью и возвращает ошибочно отклонённые. Только после этого начинается
 следующая задача.
 
 Цель — выполнить все требования простым решением. UX должен быть понятным,
@@ -28,12 +29,14 @@
 Отправьте агенту:
 
 ```text
-Install these skills globally:
+Install these skills and Claude agents globally:
 https://github.com/di-sukharev/loop-tasks-skill
 https://github.com/di-sukharev/loop-code-review-skill
 ```
 
 Или скопируйте обе папки скиллов в `~/.codex/skills/` либо `~/.claude/skills/`.
+Для Claude Code скопируйте ещё `claude-agents/*.md` из loop-code-review-skill в `~/.claude/agents/`
+и перезапустите Claude Code. Без этих агентов саб-агенты наследуют effort сессии и стоят дороже.
 Нужны саб-агенты; `orchestration` не требуется.
 
 ```text
@@ -42,7 +45,10 @@ Complete the next three open tasks in tasks/.
 Use Luna for all subagents.
 ```
 
-Claude Code: `/loop-tasks`. Модель всех саб-агентов задаётся обычным текстом.
-По умолчанию: Codex — Luna, Claude Code — Sonnet.
+Claude Code: `/loop-tasks`. Модель и effort саб-агентов задаются обычным текстом.
+По умолчанию агент задачи — Luna в Codex или Sonnet в Claude Code с effort `medium`,
+для рискованных задач — `high`. Ревьюеров выбирает loop-code-review.
+Если агент дважды не справился, оркестратор повышает effort, а затем модель.
+Если не справилась и сильная модель, пачка останавливается.
 
 [MIT](LICENSE).
