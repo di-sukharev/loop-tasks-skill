@@ -1,6 +1,8 @@
 # Loop Tasks
 
-Когда одна сессия выполняет задачи подряд, старые задачи засоряют контекст. Loop Tasks запускает для каждой задачи нового агента с чистым контекстом. Каждый агент пишет код, проверяет код через [Loop Code Review](https://github.com/di-sukharev/loop-code-review-skill), делает коммит и пуш.
+Чтобы одна модель не замазывалась в контексте нескольких задач, последующие реализации этих задач не теряли качество, а модель не начинала ходить кругами, она аутсорсит выполнение этих задач саб-агентам.
+
+Каждый саб-агент выполняет задачу и тухнет. А основная сессия запускает нового на новую задачу.
 
 ## Установка
 
@@ -14,13 +16,13 @@ https://github.com/di-sukharev/loop-code-review-skill
 
 ## Запуск
 
-Напишите `/loop-tasks <задачи>`. В Codex напишите `$loop-tasks <задачи>`. Вместо списка задач можно указать файл с задачами. Если пуш не нужен, допишите «без пуша».
+Напишите `/loop-tasks <задачи>`. Вместо списка задач можно указать файл с задачами. Если пуш не нужен, допишите «без пуша».
 
 ## Другие скиллы
 
-- [Code Scout](https://github.com/di-sukharev/code-scout-skill) поручает поиск кода дешёвой модели.
-- [Orchestration](https://github.com/di-sukharev/orchestration-skill) поручает чтение и написание кода дешёвой модели.
-- [Loop Code Review](https://github.com/di-sukharev/loop-code-review-skill) отдаёт код новому ревьюеру без истории чата.
-- [Refactoring](https://github.com/di-sukharev/refactoring-skill) меняет код, только если следующая задача станет проще.
+- [Code Scout](https://github.com/di-sukharev/code-scout-skill) — дешёвый саб-агент ищет нужный код и приносит его на тарелке.
+- [Orchestration](https://github.com/di-sukharev/orchestration-skill) — дорогая модель аутсорсит чтение и написание кода дешёвым саб-агентам.
+- [Ревью в цикле](https://github.com/di-sukharev/loop-code-review-skill) — саб-агенты без контекста в цикле находят и исправляют проблемы в изменениях.
+- [Рефакторинг](https://github.com/di-sukharev/refactoring-skill) — чистит код от легаси, лишних абстракций, слабых тестов и других жидких реализаций.
 
 [Инструкция для агента](loop-tasks/SKILL.md) · [Лицензия MIT](LICENSE)
