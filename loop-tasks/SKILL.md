@@ -1,78 +1,93 @@
 ---
 name: loop-tasks
 description: >-
-  Complete a selected task batch with a fresh agent per task. Each task agent
-  implements, checks, runs loop-code-review, commits, and pushes its work.
+  Runs a list of tasks, each in a fresh agent that writes the code, runs
+  loop-code-review, commits, and pushes. Use when the user asks for loop-tasks.
 ---
 
-## Batch coordinator
+## Goal
 
-Complete top-level tasks one at a time. Respect dependencies, the batch size,
-and the requested stopping point. Start a fresh task agent for each task.
-The task agent owns implementation, checks, review, and delivery.
-You track task order and results. Do not implement the task or coordinate its review rounds.
+In one long session, old tasks fill the context, so later tasks get worse and cost more.
+If no rule fits a case, keep each task's work inside its own fresh agent.
 
-Start each task agent without the parent conversation history:
+## Rules
 
-- Claude Code: `subagent_type: effort-medium` and `model: sonnet`. For a high-risk task, use `effort-high`. If no agent type matches the chosen effort, use the nearest type and tell the user. If these agent types are missing, use `general-purpose` and tell the user that the agent inherits the session effort.
-- Codex: Luna, `reasoning_effort: medium` (`high` for a high-risk task), and `fork_turns: "none"`. Use the longest `wait` timeout.
-- High risk: migrations, persisted data, security, concurrency, contracts that external code uses, or unclear failures across components.
-- User model and effort choices override these settings. Give the task agent the user choices for reviewers. Otherwise, `loop-code-review` chooses the reviewer settings.
+- You are the coordinator. Do not implement tasks or run review rounds. To verify a claim, read only the code that it cites. For more, ask the agent.
+- Do one top-level task at a time. Respect the dependencies, the batch size, and the requested stop point.
+- If `loop-code-review` is not available, stop. Ask the user to install it from https://github.com/di-sukharev/loop-code-review-skill.
+- Running this skill allows a commit and a push for each task after a passed review, unless the user excludes them.
+- Follow project rules. Write to agents in English and to the user in the user's language.
 
-Before each task, record `git status --short --untracked-files=all` as the baseline.
-Give the agent the task, the risk, the baseline, accepted clarifications, constraints,
-acceptance scenarios, repository path, and relevant results from earlier tasks.
+## Risk
+
+High risk: migrations, stored data, security, concurrency, APIs or data formats that code outside this repository uses, or an unclear failure across components. Other tasks have normal risk.
+
+## Agents
+
+- Claude Code: `subagent_type: general-purpose`, `model: sonnet`.
+- Codex: Luna, `reasoning_effort: medium` (`high` at high risk), `fork_turns: "none"`. Use the longest `wait_agent` timeout.
+- The user's model and effort choices override these settings.
+- Send each new task agent the Task agent brief section verbatim, then the task context. Do not poll agents.
+- Return an incomplete task to the same task agent. After two failed returns or two reports without progress, escalate. A `wait_agent` timeout is not a report.
+- To escalate, replace the task agent with a stronger one. Give it the brief, the task context, the changes, and the last report.
+- Escalate in this order: `high` effort, then a stronger model. Claude Code can only change the model. If no step is left or an agent cannot start, stop the batch and report.
+
+## Steps
+
+For each task:
+
+1. Record `git status --short --untracked-files=all` as the baseline. Leave out the files that earlier tasks left uncommitted.
+2. Start a fresh task agent. The task context is:
+   - the task, its source, and the risk;
+   - the baseline, accepted clarifications, constraints, and the Definition of Done (DoD);
+   - the user's choices for commit, push, models, and effort;
+   - the repository path and relevant results from earlier tasks.
+3. Verify each rejected finding in the report. Return a wrong rejection to the same task agent as an accepted finding. The agent continues from `loop-code-review` step 3.
+4. Start the next task only after a passed review, passing checks, and a commit and push. If the user excluded the commit or push, skip that part.
+
+Do a separate task that blocks the current one first, in the same way. The blocker does not count toward the batch size.
+
+Stop the batch and tell the user what to do if:
+
+- the task must change a file with changes in the baseline;
+- the review status is open;
+- the push fails.
+
+Do not return such a task to an agent.
+
+## Finish
+
+Report the completed tasks, checks, human checks, unresolved issues, and the commit and push status.
+Also report the cost: agents, models, efforts, and agent tokens if known.
 
 ## Task agent brief
 
-Tell each task agent to:
+You are a task agent. Take one task from code to commit.
 
-1. Read the project instructions and relevant code. Complete all task requirements
-   with the simplest sufficient solution. Keep UX simple and UI minimal.
-   Avoid unnecessary clicks, modals, and controls.
-   If the task must change a file with changes in the baseline, stop and report before you edit it.
-2. Run the narrowest relevant checks and the checks that the project requires.
-   Reuse valid results. Fix failures caused by the task. Report unrelated failures.
-   If a check still fails after two fix attempts, stop and report.
-3. Use `loop-code-review` with the given risk to review the whole task after implementation.
-   Coordinate its reviewers and resolve accepted findings.
-   Do not commit the task before the review status is passed.
-4. When authorized, commit and push only the task files.
-   Add new task files, then run `git commit -- <task files>`.
-   If a task file has changes in the baseline, do not commit. Report it.
-   If the push fails, stop and report.
-5. Report briefly and in English: requirements met, changed files, checks, review status,
-   rejected findings with reasons, commit and push status, and blockers.
-   Use `file:line` references. Do not paste code or full logs.
+### Work
 
-The task agent and reviewers follow project instructions and user overrides.
-They leave unrelated changes outside the task, review, and commits.
-They stay on the current branch unless instructed otherwise.
-They do not deploy to production or create branches or worktrees without user authorization.
-They do not open a browser or click through the app for visual inspection.
-The user checks the visual result.
+1. Read the project instructions and the relevant code. Follow the user's choices in the task context.
+2. Meet the requirements with the simplest sufficient change. Keep the UX simple and the UI minimal, without unnecessary clicks, modals, or controls.
+3. Leave no leftovers: debug output, commented-out code, temporary files, file copies, placeholder data, or unused code. Remove replaced code, data, and fallbacks, unless existing callers, clients, or stored data need them.
+4. If the task must change a file with changes in the baseline, stop and report before you edit it.
+5. Run the narrowest relevant checks and the checks that the project requires. Reuse valid results. Fix the failures that the task causes, and report other failures. If a check still fails after two fix attempts, stop and report.
+6. Run `loop-code-review` on all task changes with the given risk. If the status is open, stop and report.
+7. Commit and push only the task files, unless the task context excludes this.
+   - If a task file has changes in the baseline, stop and report.
+   - If the task source is a tracked file without changes in the baseline, mark the task as done there.
+     Use the file's own convention, such as a checkbox. If it has none, do not edit the file.
+   - Run `git add` on the new task files. Run `git commit -- <task files>` with the marked task source. Push without force.
+   - If there is no remote, skip the push. If the push fails, stop and report.
 
-## Obstacles and finish
+### Limits
 
-If a separate task blocks the current task, complete the blocker first.
-Use the same process: implementation, checks, review, commit, and push.
-Then return to the task list. Do not count the blocker toward the batch size.
+- Change only the files that your work needs. Do not stash, reset, or check out files.
+- Stay on the current branch, unless the task context asks for a branch or worktree.
+- Do not use a browser for visual checks.
+- Do not deploy or write to shared or production data.
 
-Check the rejected findings in each report. To judge one, you can read up to 100 lines of code.
-Return a wrong rejection to the task agent as a final decision.
-Tell it to resolve the finding through `loop-code-review` as an accepted finding, then commit and push as in step 4.
+### Report
 
-If a task remains incomplete, return it to the same task agent.
-After two failed returns or two reports without progress, stop that agent.
-Start a new task agent one step higher: `medium`, `high`, then a stronger model.
-Give it the task, the risk, the baseline, changes, findings, and check results.
-If the agent at the last step fails, stop the batch and report to the user.
-
-Start the next task only after the review status is passed, checks pass, and commit and push are complete,
-unless the user explicitly excludes them.
-
-If human action is needed, tell the user what is needed and stop the batch.
-A task file with changes in the baseline needs human action.
-
-Brief task agents in English. Finish in the user's language with completed tasks,
-check results, remaining issues, and commit and push status.
+Report briefly and in English, with `file:line` references. Do not paste code or full logs.
+Include the requirements met, changed files, checks, the review status, and human checks.
+Also include rejected findings with reasons, the commit and push status, blockers, and the review cost.
