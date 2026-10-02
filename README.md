@@ -21,5 +21,6 @@ https://github.com/di-sukharev/loop-code-review-skill
 - [Code Scout](https://github.com/di-sukharev/code-scout-skill) поручает поиск кода дешёвой модели.
 - [Orchestration](https://github.com/di-sukharev/orchestration-skill) поручает чтение и написание кода дешёвой модели.
 - [Loop Code Review](https://github.com/di-sukharev/loop-code-review-skill) отдаёт код новому ревьюеру без истории чата.
+- [Refactoring](https://github.com/di-sukharev/refactoring-skill) меняет код, только если следующая задача станет проще.
 
 [Инструкция для агента](loop-tasks/SKILL.md) · [Лицензия MIT](LICENSE)
