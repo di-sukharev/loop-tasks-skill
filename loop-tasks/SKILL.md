@@ -58,7 +58,7 @@ Do not return such a task to an agent.
 ## Finish
 
 Report the completed tasks, checks, human checks, unresolved issues, and the commit and push status.
-Also report the cost: agents, models, efforts, and agent tokens if known.
+Also report the cost: agents, models, and efforts.
 
 ## Task agent brief
 
